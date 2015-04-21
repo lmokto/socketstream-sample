@@ -26,12 +26,17 @@ exports.actions = function(req, res, ss) {
       ss.publish.all('newMessage', r);
       return res(true);
     },
+    
     testRedis : function(key){
-      ss.db.get(key, function(err, reply) {
-      // reply is null when the key is missing
-        return res(reply);
+      ss.db.set("a", key, function(err, reply){
+        return res(reply)
       });
+      //ss.db.get(key, function(err, reply) {
+      // reply is null when the key is missing
+      //  return res(reply);
+      //});
     },
+
     testAction: function(){
       console.log('This request now has session data:', req.session);
     },

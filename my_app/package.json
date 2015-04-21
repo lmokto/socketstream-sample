@@ -4,14 +4,17 @@
   "version": "0.0.1",
   "author": "Me <me@mydomain.com>",
   "private": true,
-  "engines": { "node": ">= 0.10.0" },
+  "engines": {
+    "node": ">= 0.10.0"
+  },
   "dependencies": {
+    "hiredis": "^0.3.0",
+    "redis": "*",
     "socketstream": "0.3.x",
     "ss-hogan": "0.1.x",
-    "ss-sockjs": "*",
-    "redis": "*"
+    "ss-sockjs": "*"
   },
-  "scripts":{
-    "start":"node app.js"
+  "scripts": {
+    "start": "node app.js"
   }
 }

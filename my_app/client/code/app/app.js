@@ -5,6 +5,7 @@
 
 
 ss.event.on('foo:bar', function(date){
+  
   var html = ss.tmpl['time-timestamp'].render({
     time: function() {
       return timestamp();
