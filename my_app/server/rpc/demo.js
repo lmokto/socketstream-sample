@@ -1,8 +1,35 @@
-'use strict';
+var _ = require('underscore');
+var async = require('async');
 // Server-side Code
+var ids = ["9013", "9015", "9064", "9071", "9072", "9074", "9075", "9016"]
+
+var normalize = function(sentence){
+  // eliminar todo tipo de caracter (!#$%&/()=?¡'".-{}+*[];:), etc
+    var words = sentence.replace(/[.,?!;()"'-]/g, " ").replace(/\s+/g, " ").toLowerCase().split(" ");
+    return words;
+}
+
+
+var checksensor = function(listmessage){
+  for (var i = 0; i<ids.length;i++){
+    if (_.contains(listmessage, ids[i]) == true){
+      return ids[i]
+    }
+  }
+}
+
+var sendredis = function(valid, id){
+  ss.db.set('valid', valid, function(e, r){
+    ss.db.set("sensor", id, function(err, reply){
+      return res(reply)
+    });
+  })
+}
 
 // Define actions which can be called from the client using ss.rpc('demo.ACTIONNAME', param1, param2...)
 exports.actions = function(req, res, ss) {
+
+  //_ = require('underscore');
 
   // Example of pre-loading sessions into req.session using internal middleware
   req.use('session');
@@ -12,12 +39,55 @@ exports.actions = function(req, res, ss) {
   return {
 
     sendMessage: function(message) {
+      
       if (message) {         // Check for blank messages
-        ss.publish.all('newMessage', message);     // Broadcast the message to everyone
-        return res(true);                          // Confirm it was sent to the originating client
+        
+        ss.publish.all('newMessage', message);
+        
+        if (message.indexOf("estas vivo") > -1){
+          
+          var listmessage = normalize(message)
+          var sensor = checksensor(listmessage)
+
+          if (_.isString(sensor)){
+
+            console.log(sensor)
+            //sendredis(1, sensor)
+            ss.db.set("a", "1", function(err, reply){
+              ss.db.set("sensor", sensor, function(err, reply){
+                ss.publish.all('newMessage', "espere un momento, verificando!");
+                var listen = setInterval(function () {
+                  ss.db.get(sensor, function(err, message){
+                    if (typeof message == 'string' && message != '' ){
+                      ss.publish.all('newMessage', message);
+                      ss.db.set('a', '0')
+                      clearInterval(listen)
+                    }                  
+                  })
+                }, 1000)
+                return res(reply)
+              });              
+            });            
+
+          } else {
+            ss.publish.all('newMessage', "el sensor no existe!  podes ingresar uno valido?, por ejemplo " + ids.join(", "));
+            return res(true);
+          }
+
+        }
+
+        if (message.indexOf('soy luis') > -1 || message.indexOf('luis') > -1){
+          ss.publish.all('newMessage', "hola luis");
+          return res(true);
+        }
+
+        // Broadcast the message to everyone
+        // Confirm it was sent to the originating client
+        return res(true);                          
       } else {
         return res(false);
       }
+
     },
 
     square : function(number){
