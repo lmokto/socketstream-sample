@@ -30,6 +30,10 @@ var sendredis = function(valid, id){
 exports.actions = function(req, res, ss) {
 
   //_ = require('underscore');
+  
+  // for (var i = 0; i<ids.length;i++){
+  //   ss.db.subscribe(ids[i])
+  // }
 
   // Example of pre-loading sessions into req.session using internal middleware
   req.use('session');
@@ -43,31 +47,28 @@ exports.actions = function(req, res, ss) {
       if (message) {         // Check for blank messages
         
         ss.publish.all('newMessage', message);
-        
+
         if (message.indexOf("estas vivo") > -1){
-          
+
           var listmessage = normalize(message)
           var sensor = checksensor(listmessage)
 
           if (_.isString(sensor)){
-
-            console.log(sensor)
-            //sendredis(1, sensor)
-            ss.db.set("a", "1", function(err, reply){
-              ss.db.set("sensor", sensor, function(err, reply){
-                ss.publish.all('newMessage', "espere un momento, verificando!");
-                var listen = setInterval(function () {
-                  ss.db.get(sensor, function(err, message){
+            ss.db2.subscribe(sensor, function(){
+              ss.db.set("a", "1", function(err, reply){
+                ss.db.set("sensor", sensor, function(err, reply){
+                  ss.publish.all('newMessage', "espere un momento, verificando!");
+                  ss.db2.on("message", function(err, message){
                     if (typeof message == 'string' && message != '' ){
-                      ss.publish.all('newMessage', message);
                       ss.db.set('a', '0')
-                      clearInterval(listen)
-                    }                  
+                      ss.publish.all('newMessage', message);
+                      ss.db.set("sensor", '')
+                      return res(true);
+                    }
                   })
-                }, 1000)
-                return res(reply)
-              });              
-            });            
+                })
+              })
+            })
 
           } else {
             ss.publish.all('newMessage', "el sensor no existe!  podes ingresar uno valido?, por ejemplo " + ids.join(", "));

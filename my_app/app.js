@@ -4,10 +4,12 @@ var http = require('http'),
     ss = require('socketstream'),
     redis = require('redis');
     conn = redis.createClient();
+    conn2 = redis.createClient();
 
 // set redis
 ss.session.store.use('redis');
 ss.api.add('db', conn);
+ss.api.add('db2', conn2);
 // redis cfg
 // {host: 'localhost', port: 6379, pass: 'myOptionalPass', db: 3}
 ss.publish.transport.use('redis', {});
